@@ -1,3 +1,5 @@
+import api.ApiSearchResult;
+import api.SpoonaccularService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -73,6 +75,11 @@ public class ResolverTest {
             arguments.add(Arguments.of(array, expected));
         }
         return arguments.stream();
+    }
+    public static void main(String[] args) {
+        SpoonaccularService spoonaccularService = new SpoonaccularService();
+        ApiSearchResult recipes = spoonaccularService.findRecipes("Bread", 3);
+        System.out.println(recipes);
     }
 
 }
