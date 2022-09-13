@@ -1,17 +1,21 @@
 package spoonacular;
+
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.path.json.JsonPath;
 import io.restassured.specification.RequestSpecification;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.*;
+
 import java.io.*;
-import api.ApiSearchResult;
-import api.SpoonaccularService;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class SpoonacularAPIDZ5Test {
 
     @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     static class TestExecutionOrderWithOrderAnnotation {
+
 
         @BeforeAll
         static void beforeAll() {
@@ -19,9 +23,39 @@ public class SpoonacularAPIDZ5Test {
             RequestSpecification base = new RequestSpecBuilder()
                     .addParam("apiKey", "6433e6be4c034cc392e307c8c8177f10")
                     .build();
+
         }
 
         @Order(1)
+        @Test
+        void testUsernameHash() throws IOException {
+            ShoppingList shoppingList = new ShoppingList();
+            JsonPath responce = RestAssured.given()
+                    .queryParam("apiKey", "6433e6be4c034cc392e307c8c8177f10")
+                    .body("{\n" +
+                            "    \"username\": \"your user's name\",\n" +
+                            "    \"firstName\": \"your user's first name\",\n" +
+                            "    \"lastName\": \"your user's last name\",\n" +
+                            "    \"email\": \"your user's email\"\n" +
+                            "}")
+                    .log()
+                    .all()
+                    .when()
+                    .post("/users/connect")
+                    .then()
+                    .log()
+                    .all()
+                    .statusCode(Integer.parseInt("200"))
+                    .extract()
+                    .jsonPath();
+            assertThat(responce.get("status").equals("success"));
+
+            shoppingList.putProperties(responce.getString("username"),
+                    responce.getString("hash"));
+
+        }
+
+        @Order(2)
         @Test
         void testAddShoppingList() throws IOException {
             ShoppingList shoppingList = new ShoppingList();
@@ -49,7 +83,7 @@ public class SpoonacularAPIDZ5Test {
                     .post("/mealplanner/" + shoppingList.getUser() + "/shopping-list/items");
         }
 
-        @Order(2)
+        @Order(3)
         @Test
         void testGetShoppingList() throws IOException {
             ShoppingList shoppingList = new ShoppingList();
@@ -71,7 +105,7 @@ public class SpoonacularAPIDZ5Test {
                     .get("/mealplanner/" + shoppingList.getUser() + "/shopping-list");
         }
 
-        @Order(3)
+        @Order(4)
         @Test
         void testDeleteShoppingList() throws IOException {
             ShoppingList shoppingList = new ShoppingList();
@@ -90,15 +124,8 @@ public class SpoonacularAPIDZ5Test {
                     .log()
                     .all()
                     .when()
-                    .delete("/mealplanner/" + shoppingList.getUser() + "/shopping-list/items" + "1296977");
+                    .delete("/mealplanner/" + shoppingList.getUser() + "/shopping-list/items");
         }
-    }
-/**
-    public static void main(String[] args) {
 
-        SpoonaccularService spoonaccularService = new SpoonaccularService();
-        ApiSearchResult recipes = spoonaccularService.findRecipes("Bread", 3);
-        System.out.println(recipes);
     }
- **/
 }
